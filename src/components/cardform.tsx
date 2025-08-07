@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "react-toastify";
 
 import { cardSchema, type CardFormData } from "@/schema/schema";
 
@@ -11,56 +12,56 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
 const CardForm = () => {
-  const { details, isSubmitted, setIsSubmitted, setDetails } = useCardStore();
+  const { setIsSubmitted, setDetails } = useCardStore();
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     reset,
   } = useForm<CardFormData>({ resolver: zodResolver(cardSchema) });
 
   const onSubmit = async (data: CardFormData) => {
-    setDetails(data);
-    setIsSubmitted(true);
-    alert("Successful");
-    alert(JSON.stringify(data));
-    reset();
+    // Show loading toast and save the toast ID
+    const toastId = toast.loading("Submitting...");
+
+    try {
+      setDetails(data);
+      // simulate async
+      await new Promise((res) => setTimeout(res, 1000));
+
+      setIsSubmitted(true);
+      reset();
+
+      // Replace loading toast with success message
+      toast.update(toastId, {
+        render: "Details Added Successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 1000,
+      });
+    } catch (err) {
+      // In case of error
+      toast.update(toastId, {
+        render: err instanceof Error ? err.message : "Something went wrong",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
   };
 
-  if (isSubmitted) {
-    return (
-      <div className="px-6 py-10 max-w-md mx-auto text-center space-y-6">
-        <div className="bg-gray-800 text-white p-6 rounded-xl shadow-md">
-          <h2 className="text-lg uppercase tracking-wide">Card Front</h2>
-          <p className="text-xl font-mono mt-4">
-            {details.cardnumber || "0000 0000 0000 0000"}
-          </p>
-          <div className="flex justify-between mt-4 text-sm">
-            <span>{details.cardname || "JANE APPLESEED"}</span>
-            <span>
-              {details.month || "MM"}/{details.year || "YY"}
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-gray-600 text-white p-4 rounded-xl shadow-md mt-4">
-          <h2 className="text-sm">Card Back</h2>
-          <p className="mt-2">CVC: {details.cvc || "000"}</p>
-        </div>
-
-        <Button className="w-full">Back to Edit</Button>
-      </div>
-    );
-  }
   return (
-    <div className="px-6 py-20">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="flex justify-center items-center px-5 py-10">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="max-w-[350px] space-y-4"
+      >
         {/* Cardholder Name */}
         <div className="flex flex-col gap-1">
           <label
             htmlFor="cardname"
-            className="uppercase text-primary font-medium"
+            className="text-sm md:text-base uppercase text-primary font-medium"
           >
             Cardholder Name
           </label>
@@ -68,7 +69,9 @@ const CardForm = () => {
             id="cardname"
             {...register("cardname")}
             type="text"
+            maxLength={30}
             placeholder="e.g. Jane Appleseed"
+            className="cursor-pointer"
           />
           {errors.cardname && (
             <p className="text-red-500 text-sm">{errors.cardname.message}</p>
@@ -79,7 +82,7 @@ const CardForm = () => {
         <div className="flex flex-col gap-1">
           <label
             htmlFor="cardnumber"
-            className="uppercase text-primary font-medium"
+            className="text-sm md:text-base uppercase text-primary font-medium"
           >
             Card Number
           </label>
@@ -88,7 +91,10 @@ const CardForm = () => {
             {...register("cardnumber")}
             type="text"
             inputMode="numeric"
+            maxLength={16}
+            minLength={16}
             placeholder="e.g. 1234 5678 9123 0000"
+            className="cursor-pointer"
           />
           {errors.cardnumber && (
             <p className="text-red-500 text-sm">{errors.cardnumber.message}</p>
@@ -96,10 +102,10 @@ const CardForm = () => {
         </div>
 
         {/* Expiry Date & CVC */}
-        <fieldset className="grid grid-cols-2 gap-3">
+        <fieldset className="grid grid-cols-2 gap-2 lg:gap-3">
           {/* Expiry */}
           <div className="flex flex-col gap-1">
-            <label className="uppercase text-primary font-medium">
+            <label className="text-sm md:text-base uppercase text-primary font-medium">
               Exp. Date (MM/YY)
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -109,6 +115,7 @@ const CardForm = () => {
                 inputMode="numeric"
                 maxLength={2}
                 placeholder="MM"
+                className="cursor-pointer"
               />
               <Input
                 {...register("year")}
@@ -116,6 +123,7 @@ const CardForm = () => {
                 inputMode="numeric"
                 maxLength={2}
                 placeholder="YY"
+                className="cursor-pointer"
               />
             </div>
             {(errors.month || errors.year) && (
@@ -127,7 +135,10 @@ const CardForm = () => {
 
           {/* CVC */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="cvc" className="uppercase text-primary font-medium">
+            <label
+              htmlFor="cvc"
+              className="text-sm md:text-base uppercase text-primary font-medium"
+            >
               CVC
             </label>
             <Input
@@ -135,8 +146,9 @@ const CardForm = () => {
               {...register("cvc")}
               type="text"
               inputMode="numeric"
-              maxLength={4}
+              maxLength={3}
               placeholder="e.g. 123"
+              className="cursor-pointer"
             />
             {errors.cvc && (
               <p className="text-red-500 text-sm">{errors.cvc.message}</p>
@@ -144,8 +156,12 @@ const CardForm = () => {
           </div>
         </fieldset>
 
-        <Button type="submit" className="w-full h-12 mt-10">
-          Confirm
+        <Button
+          type="submit"
+          className="w-full h-12 mt-10"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : "Confirm"}
         </Button>
       </form>
     </div>

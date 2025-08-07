@@ -8,18 +8,26 @@ const CardBG = () => {
   const { isSubmitted, details } = useCardStore();
 
   return (
-    <div className="relative p-2">
-      <picture className="">
-        <source srcSet={desktopBg} media="(min-width: 800px)" />
-        <img src={mobileBg} alt="Background illustration" className="w-full" />
+    <div className="relative">
+      <picture className="block w-full">
+        <source srcSet={desktopBg} media="(min-width: 1024px)" />
+        <img
+          src={mobileBg}
+          alt="Background illustration"
+          className="h-72 w-full lg:h-screen "
+        />
       </picture>
 
-      <div className="absolute top-10 left-20 max-w-[75%]">
+      {/* the back of the debit card */}
+      <div className="absolute top-10 lg:top-4/7 left-20 lg:left-auto lg:-right-1/2 lg:-translate-y-1/2 max-w-[75%]">
         <img src="/images/bg-card-back.png" alt="The back of a debit card" />
+        <span className="absolute top-[42%] lg:top-[60px] right-10 text-xs text-gray-100">
+          {isSubmitted ? details.cvc : "000"}
+        </span>
       </div>
 
       {/* the front of the debit card */}
-      <div className="absolute top-2/4 left-7 max-w-[75%]">
+      <div className="absolute top-2/4 lg:top-1/5 left-7 lg:left-auto lg:-right-1/3 max-w-[75%]">
         <div className="">
           <img
             src="/images/bg-card-front.png"
@@ -27,16 +35,14 @@ const CardBG = () => {
           />
           {/* details of the debit card */}
           <section className="absolute top-0 left-0 w-full px-6 py-3">
-            {/* container for the details within */}
-            {/* <div className=""> */}
             {/* two circles */}
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-white"></div>
               <div className="w-3 h-3 border border-white rounded-full bg-transparent"></div>
             </div>
             {/* details */}
-            <div className="mt-10">
-              <p className="text-white text-[1.6rem]">
+            <div className="mt-7 md:mt-10">
+              <p className="text-white text-base md:text-xl">
                 {isSubmitted ? details.cardnumber : "0000 0000 0000 0000"}
               </p>
               <div className="flex justify-between items-center">
@@ -50,7 +56,6 @@ const CardBG = () => {
                 </p>
               </div>
             </div>
-            {/* </div> */}
           </section>
         </div>
       </div>

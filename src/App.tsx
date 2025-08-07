@@ -7,7 +7,7 @@ function App() {
   const { isSubmitted } = useCardStore();
 
   return (
-    <div className="flex flex-col md:flex-row">
+    <div className="grid lg:grid-cols-[20fr_60fr]">
       <CardBG />
       {isSubmitted ? <Success /> : <CardForm />}
     </div>
